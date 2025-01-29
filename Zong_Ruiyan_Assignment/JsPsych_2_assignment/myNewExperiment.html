@@ -84,7 +84,7 @@
     };
     timeline.push(blue_trial, orange_trial); 
     */
-
+    
     var test = {
       type: jsPsychImageKeyboardResponse,
       stimulus: jsPsych.timelineVariable('stimulus'),
@@ -107,6 +107,7 @@
     };
     timeline.push(test_procedure);
 
+    /* Create a debrief session */
     var debrief_block = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function() {
