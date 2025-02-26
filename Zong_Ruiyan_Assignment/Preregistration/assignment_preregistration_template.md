@@ -198,7 +198,7 @@ Partcipants will be divided into 3 groups based on their experiences. Each of th
 
 ## 23. Missing data 
 
-> If a subject does not complete any of the three indices of tastiness, that subject will not be included in the analysis.
+> If a participant have missing results or does not complete any of the trials of three velocity types, that subject will not be included in the analysis.
 
 ## 24. Exploratory analysis 
 
