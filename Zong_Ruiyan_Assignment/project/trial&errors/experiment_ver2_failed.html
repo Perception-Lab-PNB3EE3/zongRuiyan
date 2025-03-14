@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+ <head>
+   <title>Experiment</title>
+   <script src="jspsych/jspsych.js"></script>
+   <script src="jspsych/plugin-html-keyboard-response.js"></script>
+   <script src="jspsych/plugin-html-button-response.js"></script>
+   <script src="jspsych/plugin-survey-html-form.js"></script>
+   <script src="jspsych/plugin-image-keyboard-response.js"></script>
+   <script src="jspsych/plugin-preload.js"></script>
+   <script src="jspsych/plugin-canvas-keyboard-response.js"></script>
+   <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css"/>
+ </head>
+ <body></body>
+ <script>
+    var jsPsych = initJsPsych({
+        on_finish: function(){
+            jsPsych.data.get().localSave('csv','mydata.csv');
+        }
+    });
+    var timeline = [];
+
+    var preload = {
+        type: jsPsychPreload,
+        images: ['basketball.png']
+    };
+    timeline.push(preload);
+
+    // The first page
+    var welcome = {
+        type:jsPsychHtmlKeyboardResponse,
+        stimulus: "Welcome to the experiment. Press any key to begin."
+    };
+    timeline.push(welcome);
+
+    var instruction = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <p> This is a experiment instruction </p>
+        <p> Add more details </p>
+        <img src='basketball.png'></img>
+        <p> Add instructions </p>
+        `
+    };
+    timeline.push(instruction);
+
+    var consent = {
+        type: jsPsychSurveyHtmlForm,
+        preamble: 'Consent Form',
+        html:`
+        <p><strong> On-Screen Consent Form</strong></p>
+        <p> More text </p>
+        <input type="checkbox" id="consent1" /> I have agreed to option 1.
+        <input type="checkbox" id="consent2" /> I have agreed to option 2.
+        <input type="checkbox" id="consent3" /> I have agreed to option 2.
+        `,
+        button_label:"Continue",
+        on_load: function(){
+            var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            var button = document.querySelector("input[type='submit']");
+
+            // Function to validate the experiment
+            function checkConsent(){
+                let allChecked = Array.form(checkboxes).every(checkbox => checkbox.checked);
+                if(!allChecked) {
+                    jsPsych.endExperiment('You have successfully end the experiment.'); //End Experiment
+                }
+            }
+
+            // Validate when the continue button is clicked
+            button.addEventListener('click', checkConsent);
+        }
+    }
+    timeline.push(consent);
+
+    var fixation = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<div style="font-size:60px;">+</div>',
+      choices: "NO_KEYS",
+      trial_duration: 1000,
+    };
+
+    const numTrials = 55;
+    const gravity = 0.5;  // Adjusted gravity value
+    const bounceVelocity = -12; // Initial bounce velocity
+    const bounceHeight = 50; // Maximum height of the ball
+    const groundLevel = 400; // Ground level
+    const duration = 600; // Inter-onset interval (ms)
+
+    const ballImg = new Image();
+    ballImg.src = "basketball.png"; // Replace with actual path
+
+//    const trials = [];
+//    for (let i = 0; i < numTrials; i++) {
+//        let startTime;
+//        let bounceTime;
+//        
+//        const trial = {
+//            type: jsPsychCanvasKeyboardResponse,
+//            stimulus: function(c) {
+//                const ctx = c.getContext('2d');
+//                c.width = 400;
+//                c.height = 500;
+//                
+//                let ball = {
+//                    x: c.width / 2,
+//                    y: bounceHeight,
+//                    radius: 25,
+//                    velocityY: 0,
+//                    isBouncingUp: false
+//                };
+//                
+//                startTime = performance.now();
+//                
+//                function animate() {
+//                    let elapsed = performance.now() - startTime;
+//                    
+//                    ball.velocityY += gravity;
+//                    ball.y += ball.velocityY;
+//                    
+//                    if (ball.y + ball.radius >= groundLevel) {
+//                        ball.y = groundLevel - ball.radius;
+//                        ball.velocityY = bounceVelocity;
+//                        ball.isBouncingUp = true;
+//                        bounceTime = performance.now();
+//                    }
+//                    
+//                    if (ball.isBouncingUp && ball.y <= bounceHeight) {
+//                        ball.y = bounceHeight;
+//                        ball.velocityY = 0;
+//                        return;
+//                    }
+//                    
+//                    ctx.clearRect(0, 0, c.width, c.height);
+//                    ctx.drawImage(ballImg, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
+//                    requestAnimationFrame(animate);
+//                }
+//                
+//                ballImg.onload = function () {
+//                    animate();
+//                };
+//            },
+//            choices: [' '],
+//            on_finish: function(data) {
+//                data.bounce_time = bounceTime;
+//                data.keypress_time = data.rt + data.start_time;
+//                data.error = data.keypress_time - bounceTime;
+//            }
+//        };
+//        
+//        trials.push(trial);
+//    }
+//    
+//    timeline.push(...trials);
+
+//    var ioi = {
+//        type: jsPsychHtmlKeyboardResponse,
+//        choices:"NO_KEYS",
+//        ioi_sample: function() {
+//            return jsPsych.randomization.sampleWithoutReplacement([600, 600, 600, 600, 600, 600, 900, 900, 900, 900, 900, 900], 1)[0];
+//        },
+//        data:{
+//            task: 'ioi'
+//        }
+//
+//    }
+
+
+//    // Trial Display
+//    const ioi = [600,900]; // Inter-onset intervals in ms
+//    const gravity_acceleration = {600: 0.20, 900: 0.09}; // Acceleration values from the study
+//    const ball_szie = 50;
+//    const movementDistance = ball_size * 0.529;
+//    const img = 'basketball.png';
+//
+//    function getBallPosition(ioi) {
+//        let screenheight = window.innerHeight;
+//        let screenwidth = window.innerWidth;
+//        let ballPosition = []
+//    
+//        let ball = {
+//            x: screenwidth /2,
+//            y: screenheight /2,
+//            redius:25, // can be adjusted
+//            velovity:0,
+//            gravity: gravity_acceleration[ioi],
+//            initialVelocity: -6.1
+//            isBouncingUp: false
+//        };
+//
+//        let start = null;
+//        let direction = 1 //falling, = -1 when rising
+//
+//        function step(timestamp)
+//
+//
+//    };
+//    
+//    function getTimeStamp(){
+//
+//    };
+//
+//
+//
+    /// Experiment Components
+//    const ioi = [600,900]; // Inter-onset intervals in ms
+//    const gravity_acceleration = {600: 0.20, 900: 0.09}; // Acceleration values from the study
+//    const ball_szie = 50;
+//    const movementDistance = 0.529 * ball_size;
+//    const img = 'basketball.png';
+//    
+//    function animate(ioi) {
+//        let ball_positions = [];
+//        let position = 0;
+//        let velocity = 0;
+//        let acceleration = gravity_acceleration[ioi];
+//        let screenheight = window.innerHeight;
+//        let screenwidth = window.innerWidth;
+//        
+//        let ball = {
+//            x: screenwidth / 2,
+//            y: screenheight /2,
+//            radius: 25, // can be adjusted
+//            velocity:0,
+//        }
+//
+//        let startTime = null;
+//        let elapseTime = 0;
+//        const duration = 
+//
+//    }
+
+    var debrief_block ={
+        type:jsPsychHtmlKeyboardResponse,
+        stimulus: function(){
+            return`
+            <p> Press any key to complete the experiment. Thank you! </p>
+            <p> Your data will be downloaded automatically </p>
+            `
+        }   
+    };
+    timeline.push(debrief_block)
+    jsPsych.run(timeline);
+ </script>
+ <html>
+ 

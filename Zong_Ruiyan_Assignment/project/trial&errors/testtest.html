@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+ <head>
+   <title>Experiment</title>
+   <script src="jspsych/jspsych.js"></script>
+   <script src="jspsych/plugin-html-keyboard-response.js"></script>
+   <script src="jspsych/plugin-html-button-response.js"></script>
+   <script src="jspsych/plugin-survey-html-form.js"></script>
+   <script src="jspsych/plugin-image-keyboard-response.js"></script>
+   <script src="jspsych/plugin-preload.js"></script>
+   <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css"/>
+   <style>
+     canvas {
+         background: black;
+         display: block;
+         margin: auto;
+     }
+     button {
+         display: block;
+         margin: 10px auto;
+         padding: 10px;
+         font-size: 16px;
+         cursor: pointer;
+     }
+   </style>
+ </head>
+ <body>
+ 
+ <script>
+
+   var timeline = [];
+   var jsPsych = initJsPsych({
+     on_finish: function() {
+       console.log('Trial complete!')
+       jsPsych.data.get().localSave('csv','mydata.csv'); //displayData();
+     }
+   });
+ 
+   const participantID = jsPsych.randomization.randomID(5);
+   jsPsych.data.addProperties({"Participant ID": participantID});
+   console.log("Participant ID:", participantID);
+ 
+   var welcome = {
+       type: jsPsychHtmlKeyboardResponse,
+       stimulus: "Welcome to the experiment. Press any key to begin."
+   };
+   timeline.push(welcome);
+ 
+   var instructions = {
+     type: jsPsychHtmlKeyboardResponse,
+     stimulus: `
+       <p>In this experiment, you will see a basketball bouncing on the screen. Your task is to press the spacebar in sync with the moment the ball reaches the lowest point of its bounce.</p>
+       <p>Try to be as precise as possible, keeping your taps in rhythm with the ball's motion.</p>
+       <p>The experiment consists of multiple trials with different bouncing speeds.</p>
+       <p>Press any key to proceed to the consent form.</p>
+     `,
+   };
+   timeline.push(instructions);
+ 
+   var consent = {
+     type: jsPsychSurveyHtmlForm,
+     preamble: 'Consent Form',
+     html: `
+       <p><strong> Synchronizing with a Bouncing Ball</strong></p> 
+       <p>Principal Investigator: N/A</p>
+       <p>Institution: McMaster University</p>
+       <p>Contact Information: zongr1@mcmaster.ca</p>
+       <p>Purpose of the Study: To examine an individual's ability to synchronize their tapping with realistic visual motion.</p>
+       <input type="checkbox" id="consent-checkbox" name="consent-checkbox" /> I agree to all the conditions
+     `,
+     on_load: function () {
+       setTimeout(() => {
+         let button = document.querySelector("input[type='submit']");
+         if (button) {
+           button.disabled = true;
+           document.getElementById("consent-checkbox").addEventListener("change", function () {
+             button.disabled = !this.checked;
+           });
+         } else {
+           console.error("Button not found!");
+         }
+       }, 50);
+     }
+   };
+   timeline.push(consent);
+ 
+  // Create an array to store bounce times and spacebar presses
+   var bounceData = [];
+   
+   // Create the bouncing ball task
+   var bouncingBallTask = {
+     type: jsPsychHtmlKeyboardResponse,
+     stimulus: '<div id="ball" style="position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; border-radius: 50%; background-color: red;"></div>',
+     choices: ['space'],
+     trial_duration: 33000,  // Task duration 33 seconds
+     prompt: 'Press the spacebar when the ball bounces!',
+     on_start: function() {
+       var ball = document.getElementById('ball');
+       var direction = 1;  // 1 for moving down, -1 for moving up
+       var speed = 5;  // Ball speed
+       var bounceInterval = setInterval(function() {
+         var ballPosition = ball.offsetTop;
+         var windowHeight = window.innerHeight;
+         // Move the ball up and down
+         if (ballPosition >= windowHeight - 50 || ballPosition <= 0) {
+           direction *= -1;  // Reverse direction when the ball reaches the top/bottom
+           bounceData.push({
+             bounce_time: Date.now()
+           });
+         }
+         ball.style.top = ballPosition + direction * speed + 'px';
+       }, 16);  // ~60 fps
+     
+       // End the bouncing simulation after 33 seconds
+       setTimeout(function() {
+         clearInterval(bounceInterval);
+         // Prompt the user to press spacebar one more time to proceed
+         jsPsych.pluginAPI.cancelAllKeyboardResponses();
+         var finishMessage = '<p>Task complete. Please press the spacebar one more time to proceed.</p>';
+         document.body.innerHTML = finishMessage;
+       }, 33000);  // 33 seconds
+     },
+     on_finish: function(data) {
+       // Store the data (bounce time and key press)
+       bounceData.forEach(function(bounce) {
+         data.bounce_time = bounce.bounce_time;
+       });
+       // Collect spacebar press timestamp
+       jsPsych.pluginAPI.clearAllTimeouts();
+     }
+   };
+   timeline.push(bouncingBallTask)
+
+   // Create the debrief block
+   var debriefBlock = {
+     type: jsPsychHtmlKeyboardResponse,
+     stimulus: '<p>Thank you for completing the task! Press any key to complete the experiment.</p>',
+     choices: "ALL_KEYS"
+    }
+
+    timeline.push(debriefBlock)
+
+  jsPsych.run(timeline);
+ </script>
+ </body>
+ <html>
+ 

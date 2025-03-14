@@ -1,50 +1,236 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>js2 Part2</title>
-    <script src="/Users/ruiz/Documents/Study/PNB3EE3/zongRuiyan/Zong_Ruiyan_Assignment/jspsych/jspsych.js"></script>
-    <script src="/Users/ruiz/Documents/Study/PNB3EE3/zongRuiyan/Zong_Ruiyan_Assignment/jspsych/plugin-html-keyboard-response.js"></script>
-    <script src="/Users/ruiz/Documents/Study/PNB3EE3/zongRuiyan/Zong_Ruiyan_Assignment/jspsych/plugin-html-button-response.js"></script>
-    <script src="/Users/ruiz/Documents/Study/PNB3EE3/zongRuiyan/Zong_Ruiyan_Assignment/jspsych/plugin-image-keyboard-response.js"></script>
-    <script src="/Users/ruiz/Documents/Study/PNB3EE3/zongRuiyan/Zong_Ruiyan_Assignment/jspsych/plugin-preload.js"></script>
-    <link href="/Users/ruiz/Documents/Study/PNB3EE3/zongRuiyan/Zong_Ruiyan_Assignment/jspsych/jspsych.css" rel="stylesheet" type="text/css" />
-  </head>
-  <body></body>
-  <script>
-    var jsPsych = initJsPsych({
-      on_finish: function() {
-        jsPsych.data.displayData();
-      }
-    });
-    var timeline = [];
-    
-    /*var preload = {
-      type: jsPsychPreload,
-      images: ['img/blue.png', 
-            'img/orange.png']
-    };        
-    timeline.push(preload);*/
+ <head>
+   <title>Experiment</title>
+   <script src="jspsych/jspsych.js"></script>
+   <script src="jspsych/plugin-html-keyboard-response.js"></script>
+   <script src="jspsych/plugin-html-button-response.js"></script>
+   <script src="jspsych/plugin-survey-html-form.js"></script>
+   <script src="jspsych/plugin-image-keyboard-response.js"></script>
+   <script src="jspsych/plugin-preload.js"></script>
+   <script src="jspsych/plugin-fullscreen.js"></script>
+   <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css"/>
+   <style>
+     canvas {
+         background: black;
+         display: block;
+         margin: auto;
+     }
+     button {
+         display: block;
+         margin: 10px auto;
+         padding: 10px;
+         font-size: 16px;
+         cursor: pointer; 
+     } 
+   </style>
+ </head>
+ <body>
+ 
+ <script>
+   var timeline = [];
+   var jsPsych = initJsPsych({
+     on_finish: function() {
+      console.log('Trial complete!')
+      jsPsych.data.get().localSave('csv','mydata.csv');
+     }
+   });
 
-    var welcome = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: "Welcome to the experiment. Press any key to begin."
-    };
-    timeline.push(welcome);
+   timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+   });
 
-    var instructions = {
+   const participantID = jsPsych.randomization.randomID(5);
+   jsPsych.data.addProperties({"Participant ID": participantID});
+   console.log("Participant ID:", participantID);
+ 
+   var welcome = {
+       type: jsPsychHtmlKeyboardResponse,
+       stimulus: "Welcome to the experiment. Press any key to begin."
+   };
+   timeline.push(welcome);
+ 
+   var consent = {
+     type: jsPsychSurveyHtmlForm,
+     preamble: 'Consent Form',
+     html: `
+       <p><strong> Synchronizing with a Bouncing Ball</strong></p> 
+       <p>Principal Investigator: N/A</p>
+       <p>Institution: McMaster University</p>
+       <p>Contact Information: zongr1@mcmaster.ca</p>
+       <p>Purpose of the Study: To examine an individual's ability to synchronize their tapping with realistic visual motion.</p>
+
+       <p> Your participation in this study is completely voluntary. You may choose to stop at any time without any penalty. </p>
+       <p> Your participation in this study is completely voluntary. You may choose to stop at any time without any penalty. </p>
+       <p> Your participation in this study is completely voluntary. You may choose to stop at any time without any penalty. </p>
+       <p> All data collected in this study will be stored securely and analyzed anonymously. No personally identifiable information will be shared.</p>
+       <p> There are no known risks associated with participating in this study. However, if you feel any discomfort, you may stop at any time. </p>
+
+       <input type="checkbox" id="consent-checkbox" name="consent-checkbox" /> I agree to all the conditions
+     `,
+     on_load: function () {
+       setTimeout(() => {
+         let button = document.querySelector("input[type='submit']");
+         if (button) {
+           button.disabled = true;
+           document.getElementById("consent-checkbox").addEventListener("change", function () {
+             button.disabled = !this.checked;
+           });
+         } else {
+           console.error("Button not found!");
+         }
+       }, 50);
+     }
+   };
+   timeline.push(consent);
+   
+   var instructions = {
+     type: jsPsychHtmlKeyboardResponse,
+     stimulus: `
+       <p>In this experiment, you will see a basketball bouncing on the screen. </p>
+       <img src='basketball.png'></img>
+       <p>Your task is to press the spacebar in sync with the moment the ball reaches the lowest point of its bounce.</p>
+       <p>Try to be as precise as possible, keeping your taps in rhythm with the ball's motion.</p>
+       <p>The experiment consists of 6 trials which all have the same bouncing velocity.</p>
+       <p>Press any key to proceed to the consent form.</p>
+     `,
+   };
+   timeline.push(instructions);
+
+   var fixation = {
       type: jsPsychHtmlKeyboardResponse,
-      stimulus: `
-        <p>In this task, you will see a bouncing basketball appear on the screen. </p>
-        <p>It'll bounce with a regular rhythm.</p>
-        <p>Your task is to pay close attention to the timing of each bounce</p>.
-        <p>After the fourth bounce, there will be no fifth bounce. Instead, you will need to press the space bar when you think the fifth bounce will happen following the same rhythm. </p>
-      `,
+      stimulus: '<div style="font-size:60px;">Next Trial</div>',
+      choices: "NO_KEYS",
+      trial_duration: 1000,
     };
-    timeline.push(instructions);
 
-    var consent = {}
-    timeline.run(timeline);
 
-    jsPsych.run(timeline);
-  </script>
-</html>
+   var basketballTask = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '',
+    prompt: 'Watch the bouncing ball and press the spacebar when you think it hits the ground.',
+    choices: ['space'],
+    trial_duration: 33000, // Task runs for 33 seconds
+    on_load: function () {
+      let container = document.createElement("div");
+      container.style.textAlign = "center";
+
+      let canvas = document.createElement("canvas");
+      canvas.id = "gameCanvas";
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      canvas.style.background = "black";
+
+      container.appendChild(canvas);
+      document.body.appendChild(container);
+
+      const ctx = canvas.getContext("2d");
+      const ballImg = new Image();
+      ballImg.src = "basketball.png";
+
+      let ball = {
+        x: canvas.width / 2,
+        y: 50,
+        radius: 25,
+        velocityY: 0,
+        gravity: 0.5,
+        initialVelocity: -16
+      };
+
+      let startTime = null;
+      let elapsedTime = 0;
+      const duration = 33;
+      var bounceTimestamps = [];
+      var responseTimestamps = [];
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(ballImg, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
+      }
+
+      function update(timestamp) {
+        if (!startTime) startTime = timestamp;
+        elapsedTime = (timestamp - startTime) / 1000;
+
+        if (elapsedTime >= duration) return;
+
+        ball.velocityY += ball.gravity;
+        ball.y += ball.velocityY;
+
+        if (ball.y + ball.radius > canvas.height) {
+          ball.y = canvas.height - ball.radius;
+          ball.velocityY = ball.initialVelocity;
+          let bounceTime = ((performance.now() - startTime) / 1000).toFixed(3);
+          bounceTimestamps.push(bounceTime);
+        }
+
+        draw();
+        requestAnimationFrame(update);
+      }
+
+      function recordPress(event) {
+        if (event.code === "Space") {
+          let userTime = ((performance.now() - startTime) / 1000).toFixed(3);
+          responseTimestamps.push(userTime);
+        }
+      }
+
+      document.addEventListener("keydown", recordPress);
+
+      ballImg.onload = function () {
+        requestAnimationFrame(update);
+      };
+
+      setTimeout(function () {
+        document.removeEventListener("keydown", recordPress); // Stop recording key presses
+        jsPsych.pluginAPI.cancelAllKeyboardResponses();
+          
+        let messageDiv = document.createElement("div");
+        messageDiv.innerHTML = '<p>Task complete. Please click the button below to proceed.</p>';
+          
+        let proceedButton = document.createElement("button");
+        proceedButton.textContent = "Proceed";
+        proceedButton.onclick = function () {
+            jsPsych.finishTrial(); // Moves to the next trial in the timeline
+        };
+        
+        messageDiv.appendChild(proceedButton);
+        document.body.innerHTML = ""; // Clear existing content
+        document.body.appendChild(messageDiv);
+    }, 33000); // 33 seconds
+    
+
+      // Store timestamps globally so on_finish can access them
+      basketballTask.bounceTimestamps = bounceTimestamps;
+      basketballTask.responseTimestamps = responseTimestamps;
+    },
+
+    on_finish: function (data) {
+      data.bounce_time = basketballTask.bounceTimestamps;
+      data.response_time = basketballTask.responseTimestamps;
+      jsPsych.pluginAPI.clearAllTimeouts();
+    }
+    };
+
+  var test_procedure = {
+    timeline: [fixation, basketballTask],
+    //timeline_variables: test_stimuli,
+    randomize_order: true,
+    repetitions: 6
+  };
+  timeline.push(test_procedure)
+  
+  var debrief_block ={
+        type:jsPsychHtmlKeyboardResponse,
+        stimulus: function(){
+            return`
+            <p>Task complete. Please click the button below to proceed.</p>
+            `
+        }   
+    };
+    timeline.push(debrief_block)
+ </script>
+ </body>
+ <html>
+ 
